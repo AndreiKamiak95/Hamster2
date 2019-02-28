@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/ico">
+        <file>./gif/movie.gif</file>
+        <file>./gif/homka.png</file>
+    </qresource>
+</RCC>
