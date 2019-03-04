@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     nameListint64 = new QList<quint64>();
     timer1 = new QTimer();
     reset = "T19EF00FE808FFFFFFFFFFFFFF\r";
+    loading = false;
 
     if(!configFile->open(QIODevice::ReadOnly))
     {
@@ -100,12 +101,15 @@ void MainWindow::on_btnDisconnect_clicked()
     ui->cmbxPort->setEnabled(true);
     mo.stop();
     ui->lblInfo->setText("");
+    dataList->clear();
 }
 
 void MainWindow::on_btnLoad_clicked()
 {
     selectedSettings = new Settings(settingsList->at(ui->cmbxFile->currentIndex()));
     QFile *file = new QFile("./files/" + selectedSettings->name_file);
+
+    connect(port, SIGNAL(readyRead()), this, SLOT(readData()));
 
     if(!file->open(QIODevice::ReadOnly))
     {
@@ -147,8 +151,13 @@ void MainWindow::on_btnLoad_clicked()
     ui->progressBar->setMinimum(0);
     ui->progressBar->setMaximum(dataList->length() - 1);
     ui->progressBar->setValue(iterator);
+    ui->lblInfo->setText("NameFile: "+selectedSettings->name_file+
+                             "  messages: "+QVariant(dataList->count()).toString());
+    mo.start();
+
 
     QByteArray req_adr_clame("T18EEFEFF8FFFFFFFFFFFFFFFF\r");
+    loading = true;
     port->write(req_adr_clame, 27);
 }
 
@@ -162,7 +171,7 @@ void MainWindow::readData()
         if(receivedData[i] == 'T')
         {
             QByteArray one_msg29;
-            one_msg29 = receivedData.mid(i, 27-1);
+            one_msg29 = receivedData.mid(i, 27);
 
             if(!one_msg29.indexOf("18EEFF"))
             {
@@ -202,39 +211,50 @@ void MainWindow::readData()
         }
         else if(receivedData[i] == 't') //11bit id
         {
-            QByteArray one_msg11, id11;
-            one_msg11 = receivedData.mid(i, 21-1);
-            id11 = one_msg11.mid(1,3-1);
-
-            if(!id11.indexOf("700"))
+            if(loading == true)
             {
-                QByteArray send_msg("t600801FFFFFF00000000\r");
-                send_msg[2]  = toASCII((selectedSettings->id_bootloader&0xF0)>>4);
-                send_msg[3]  = toASCII(selectedSettings->id_bootloader&0x0F);
-                send_msg[13] = toASCII((count_data_msg&0x000000F0)>>4);
-                send_msg[14] = toASCII( count_data_msg&0x0000000F);
-                send_msg[15] = toASCII((count_data_msg&0x0000F000)>>12);
-                send_msg[16] = toASCII((count_data_msg&0x00000F00)>>8);
-                send_msg[17] = toASCII((count_data_msg&0x00F00000)>>20);
-                send_msg[18] = toASCII((count_data_msg&0x000F0000)>>16);
-                send_msg[19] = toASCII((count_data_msg&0xF0000000)>>28);
-                send_msg[20] = toASCII((count_data_msg&0x0F000000)>>24);
+                QByteArray one_msg11, id11;
+                one_msg11 = receivedData.mid(i, 21);
+                id11 = one_msg11.mid(1,3);
 
-                port->write(send_msg, 21);
-            }
-            else if(!id11.indexOf("300"))
-            {
-                if(iterator < dataList->length())
+                if(!id11.indexOf("700"))
                 {
-                    port->write(dataList->at(iterator), 21);
-                    ui->progressBar->setValue(iterator);
-                    iterator++;
+                    QByteArray send_msg("t600801FFFFFF00000000\r");
+                    send_msg[2]  = toASCII((selectedSettings->id_bootloader&0xF0)>>4);
+                    send_msg[3]  = toASCII(selectedSettings->id_bootloader&0x0F);
+                    send_msg[13] = toASCII((count_data_msg&0x000000F0)>>4);
+                    send_msg[14] = toASCII( count_data_msg&0x0000000F);
+                    send_msg[15] = toASCII((count_data_msg&0x0000F000)>>12);
+                    send_msg[16] = toASCII((count_data_msg&0x00000F00)>>8);
+                    send_msg[17] = toASCII((count_data_msg&0x00F00000)>>20);
+                    send_msg[18] = toASCII((count_data_msg&0x000F0000)>>16);
+                    send_msg[19] = toASCII((count_data_msg&0xF0000000)>>28);
+                    send_msg[20] = toASCII((count_data_msg&0x0F000000)>>24);
+
+                    port->write(send_msg, 22);
                 }
-                else
+                else if(!id11.indexOf("300"))
                 {
-                    QByteArray msg_end("t600802FFFFFFFFFFFFFF\r");
-                    msg_end[2] = toASCII((selectedSettings->id_bootloader&0xF0)>>4);
-                    msg_end[3] = toASCII( selectedSettings->id_bootloader&0x0F);
+                    if(iterator < dataList->length())
+                    {
+                        port->write(dataList->at(iterator), 22);
+                        ui->progressBar->setValue(iterator);
+                        iterator++;
+                    }
+                    else
+                    {
+                        QByteArray msg_end("t600802FFFFFFFFFFFFFF\r");
+                        msg_end[2] = toASCII((selectedSettings->id_bootloader&0xF0)>>4);
+                        msg_end[3] = toASCII( selectedSettings->id_bootloader&0x0F);
+
+                        port->write(msg_end, 22);
+                        loading = false;
+                        QSound::play(":/sounds/sounds/sound01.wav");
+                        QMessageBox::information(this, "Hamster", "Download complete");
+                        ui->progressBar->setValue(0);
+                        mo.stop();
+                        break;
+                    }
                 }
             }
         }
@@ -262,7 +282,7 @@ void MainWindow::StopTimer1()
     reset[5] = nameList->at(num_find)[7];
     reset[6] = nameList->at(num_find)[8];
 
-    port->write(reset);
+    port->write(reset, 22);
 }
 
 quint8 MainWindow::toASCII(quint8 num)

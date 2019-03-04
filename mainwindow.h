@@ -49,6 +49,7 @@ private:
     int iterator;
     quint8 DA;
     quint32 count_data_msg;
+    bool loading;
 
     QByteArray reset;
 };
