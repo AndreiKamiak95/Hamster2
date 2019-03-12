@@ -153,6 +153,7 @@ void MainWindow::on_btnLoad_clicked()
     ui->progressBar->setValue(iterator);
     ui->lblInfo->setText("NameFile: "+selectedSettings->name_file+
                              "  messages: "+QVariant(dataList->count()).toString());
+    ui->btnLoad->setEnabled(false);
     mo.start();
 
 
@@ -252,6 +253,8 @@ void MainWindow::readData()
                         QSound::play(":/sounds/sounds/sound01.wav");
                         QMessageBox::information(this, "Hamster", "Download complete");
                         ui->progressBar->setValue(0);
+                        ui->btnLoad->setEnabled(true);
+                        dataList->clear();
                         mo.stop();
                         break;
                     }
