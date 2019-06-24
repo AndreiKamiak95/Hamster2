@@ -19,17 +19,17 @@ Settings::Settings(QString str)
     n1 = buf.indexOf(';', n+1);
     s = buf.mid(n+1, n1-n-1);
     if(s.indexOf('x') > -1)
-        name_unit = s.toInt(&flag, 16);
+        name_unit = s.toULongLong(&flag, 16);
     else
-        name_unit = s.toInt();
+        name_unit = s.toULongLong();
 
     n = n1;
     n1 = buf.indexOf(';', n+1);
     s = buf.mid(n+1, n1-n-1);
     if(s.indexOf('x') > -1)
-        mask = s.toInt(&flag, 16);
+        mask = s.toULongLong(&flag, 16);
     else
-        mask = s.toInt();
+        mask = s.toULongLong();
 
     n = n1;
     n1 = buf.indexOf(';', n+1);

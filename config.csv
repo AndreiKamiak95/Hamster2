@@ -1,5 +1,4 @@
 Название прошивки|имя блока|маска|id_bootloader|имя файла
-БИ СВК;0x1111;0x111;0x11;svk_term.bin
-БВВ СВК;0x2222;0x222;0x22;skv_bu.bin
-ПРОТРАВЛИВАТЕЛЬ;0x33333;0x33;0x33;treater.bin
 ПОЖ ПУЛЬТ;0x9F00FBFFF85FFFFF;0xFFFFFBFFFFFFFFFF;0x10;pozh-DMS.bin
+ПОЖ БУ;0x9F00FBFFF85FFFFF;0xFFFFFBFFFFFFFFFF;0x10;pozh-CUS.bin
+ПОЖ ПУЛЬТ  test;0x9F00FBFFF85FFFFF;0xFFFFFBFFFFFFFFFF;0x10;pozh-DMS-test.bin

@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     nameList = new QList<QByteArray>();
     nameListint64 = new QList<quint64>();
     timer1 = new QTimer();
-    reset = "T19EF00FE808FFFFFFFFFFFFFF\r";
+    reset = "T19EF00FE808FFFFFFFFFFFFFF\r";  //0dea6061
     loading = false;
 
     if(!configFile->open(QIODevice::ReadOnly))
@@ -160,6 +160,7 @@ void MainWindow::on_btnLoad_clicked()
     QByteArray req_adr_clame("T18EEFEFF8FFFFFFFFFFFFFFFF\r");
     loading = true;
     port->write(req_adr_clame, 27);
+    timer1->start(1000);
 }
 
 void MainWindow::readData()
@@ -174,9 +175,9 @@ void MainWindow::readData()
             QByteArray one_msg29;
             one_msg29 = receivedData.mid(i, 27);
 
-            if(!one_msg29.indexOf("18EEFF"))
+            if(one_msg29.indexOf("T18EEFF") >= 0)
             {
-                timer1->start(250);
+
                 nameList->append(one_msg29);
                 quint64 byte8;
                 quint64 byte[8];
@@ -253,7 +254,7 @@ void MainWindow::readData()
                         QSound::play(":/sounds/sounds/sound01.wav");
                         QMessageBox::information(this, "Hamster", "Download complete");
                         ui->progressBar->setValue(0);
-                        ui->btnLoad->setEnabled(true);
+                        //ui->btnLoad->setEnabled(true);
                         dataList->clear();
                         mo.stop();
                         break;
@@ -270,6 +271,7 @@ void MainWindow::StopTimer1()
     quint64 buf1, buf2;
     buf1 = selectedSettings->name_unit & selectedSettings->mask;
     int num_find;
+    quint8 function = (selectedSettings->name_unit & 0xFF0000000000) >> 40;
 
     for(int i = 0; i < nameListint64->length(); i++)
     {
@@ -282,10 +284,15 @@ void MainWindow::StopTimer1()
             break;
         }
     }
-    reset[5] = nameList->at(num_find)[7];
-    reset[6] = nameList->at(num_find)[8];
 
-    port->write(reset, 22);
+    if(nameList->length() != 0) {
+        reset[5] = nameList->at(num_find)[7];
+        reset[6] = nameList->at(num_find)[8];
+        reset[12] = toASCII((function & 0xF0) >> 4);
+        reset[13] = toASCII(function & 0x0F);
+
+        port->write(reset, 27);
+    }
 }
 
 quint8 MainWindow::toASCII(quint8 num)
