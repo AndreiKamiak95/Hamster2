@@ -281,17 +281,16 @@ void MainWindow::StopTimer1()
             num_find = i;
             DA = toNUM(nameList->at(i)[7])<<4;
             DA |= toNUM(nameList->at(i)[8]);
+
+            reset[5] = nameList->at(num_find)[7];
+            reset[6] = nameList->at(num_find)[8];
+            reset[12] = toASCII((function & 0xF0) >> 4);
+            reset[13] = toASCII(function & 0x0F);
+
+            port->write(reset, 27);
+
             break;
         }
-    }
-
-    if(nameList->length() != 0) {
-        reset[5] = nameList->at(num_find)[7];
-        reset[6] = nameList->at(num_find)[8];
-        reset[12] = toASCII((function & 0xF0) >> 4);
-        reset[13] = toASCII(function & 0x0F);
-
-        port->write(reset, 27);
     }
 }
 
