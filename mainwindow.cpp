@@ -284,6 +284,9 @@ void MainWindow::StopTimer1()
 
             reset[5] = nameList->at(num_find)[7];
             reset[6] = nameList->at(num_find)[8];
+
+            port->write(reset, 27);// отправляем reset без номера функции
+
             reset[12] = toASCII((function & 0xF0) >> 4);
             reset[13] = toASCII(function & 0x0F);
 
